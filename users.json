@@ -1,0 +1,11 @@
+{
+  "1": {
+    "id": 1,
+    "email": "james@restaurant.com",
+    "password": "restaurant2026",
+    "restaurantName": "Quincey's Burgers and Brisket",
+    "paid": false,
+    "freeTrialUsed": 1,
+    "created": "2026-03-17T12:00:00.000Z"
+  }
+}

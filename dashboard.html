@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Restaurant AI Toolkit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --primary: #FF6B35;
+      --primary-dark: #E55A2B;
+      --secondary: #1A1A2E;
+      --accent: #16213E;
+      --light: #F7F7F7;
+      --white: #FFFFFF;
+      --gray: #6B7280;
+      --gray-light: #9CA3AF;
+      --success: #10B981;
+      --border: #E5E7EB;
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: var(--light); 
+      color: var(--secondary); 
+      line-height: 1.5;
+    }
+    
+    /* App Container */
+    .app { height: 100%; display: flex; flex-direction: column; }
+    
+    /* Header */
+    header { 
+      background: var(--secondary); 
+      padding: 1rem 1.25rem; 
+      flex-shrink: 0;
+    }
+    .header-row { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.25rem; font-weight: 700; color: var(--white); }
+    .logo span { color: var(--primary); }
+    .header-btn { background: none; border: none; color: var(--white); font-size: 1.25rem; cursor: pointer; padding: 0.25rem; }
+    
+    /* Restaurant Input Bar */
+    .resto-bar { 
+      background: var(--accent); 
+      padding: 0.6rem 1.25rem; 
+      display: flex; 
+      align-items: center; 
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .resto-bar label { color: rgba(255,255,255,0.6); font-size: 0.8rem; }
+    .resto-bar input { 
+      flex: 1; 
+      background: rgba(255,255,255,0.1); 
+      border: none; 
+      padding: 0.5rem 0.75rem; 
+      border-radius: 8px; 
+      color: var(--white); 
+      font-size: 0.9rem; 
+    }
+    .resto-bar input::placeholder { color: rgba(255,255,255,0.4); }
+    .resto-bar input:focus { outline: none; background: rgba(255,255,255,0.15); }
+    
+    /* Payment Banner */
+    .payment-banner {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 0.75rem 1.25rem;
+      color: var(--white);
+      text-align: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      display: none;
+    }
+    .payment-banner.show { display: block; }
+    .payment-banner a {
+      color: var(--white);
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    
+    /* Pages */
+    .pages { flex: 1; overflow: hidden; position: relative; }
+    .page { 
+      position: absolute; 
+      top: 0; left: 0; right: 0; bottom: 0; 
+      overflow-y: auto; 
+      padding: 1.25rem;
+      background: var(--light);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page.active { transform: translateX(0); }
+    .page.exit { transform: translateX(-100%); }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+      flex-shrink: 0;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.4rem 0.75rem;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .tab-item.active { color: var(--primary); }
+    .tab-icon { font-size: 1.4rem; }
+    
+    /* Tool Cards (Home Page) */
+    .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .tool-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.25rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .tool-card:active { transform: scale(0.97); }
+    .tool-card-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .tool-card-title { font-weight: 600; font-size: 0.9rem; }
+    .tool-card-desc { font-size: 0.75rem; color: var(--gray); margin-top: 0.25rem; }
+    
+    /* Full Tool Page */
+    .tool-page h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+    .tool-page .subtitle { color: var(--gray); font-size: 0.85rem; margin-bottom: 1.25rem; }
+    
+    .form-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-group label { display: block; font-weight: 500; font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .form-group input, .form-group select, .form-group textarea { 
+      width: 100%; 
+      padding: 0.75rem; 
+      border: 2px solid var(--border); 
+      border-radius: 10px; 
+      font-size: 1rem; 
+      font-family: inherit; 
+      background: var(--white);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+      border-color: var(--primary); 
+      outline: none; 
+    }
+    .form-group textarea { min-height: 80px; resize: none; }
+    
+    .tone-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .tone-option { 
+      padding: 0.5rem 0.75rem; 
+      border: 2px solid var(--border); 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 0.8rem; 
+      transition: all 0.2s;
+    }
+    .tone-option.selected { border-color: var(--primary); background: #FFF0EB; color: var(--primary); }
+    
+    .btn { 
+      display: inline-block; 
+      padding: 0.85rem 1.25rem; 
+      border-radius: 10px; 
+      font-weight: 600; 
+      font-size: 0.95rem;
+      text-align: center;
+      cursor: pointer; 
+      border: none; 
+      width: 100%;
+    }
+    .btn-primary { background: var(--primary); color: var(--white); }
+    .btn-primary:active { background: var(--primary-dark); }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--gray); }
+    .btn-full { background: var(--primary); color: var(--white); }
+    
+    /* Result */
+    .result-box { 
+      margin-top: 1rem; 
+      padding: 1rem; 
+      background: var(--white); 
+      border-radius: 12px; 
+      display: none;
+    }
+    .result-box.has-content { display: block; }
+    .result-box h4 { font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .result-content { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; }
+    .result-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+    .result-actions .btn { padding: 0.5rem 0.75rem; font-size: 0.8rem; width: auto; flex: 1; }
+    
+    /* Loading */
+    .loading { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 2rem; color: var(--primary); }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* History Page */
+    .history-item {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+    }
+    .history-item:active { background: #fafafa; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .history-tool { font-size: 0.7rem; text-transform: uppercase; color: var(--gray); font-weight: 600; letter-spacing: 0.05em; }
+    .history-time { font-size: 0.7rem; color: var(--gray-light); }
+    .history-preview { font-size: 0.85rem; color: var(--secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-empty { text-align: center; padding: 3rem 1rem; color: var(--gray); }
+    .history-empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    
+    /* Back Button */
+    .back-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; color: var(--white); }
+    
+    /* Settings */
+    .settings-section { margin-bottom: 1.5rem; }
+    .settings-section h3 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--secondary); }
+    .settings-item {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .settings-item label { font-size: 0.9rem; }
+    .logout-btn { background: #FEE2E2; color: #DC2626; }
+    
+    /* Trial Info */
+    .trial-info {
+      background: #FEF3C7;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .trial-info.paid { background: #D1FAE5; }
+    .trial-text { font-size: 0.85rem; color: var(--secondary); }
+    .trial-btn {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    
+    /* Payment Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .modal h2 { margin-bottom: 0.5rem; }
+    .modal p { color: var(--gray); margin-bottom: 1.5rem; }
+    .modal .price { font-size: 2.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.25rem; }
+    .modal .price-period { color: var(--gray); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .modal-features { text-align: left; margin-bottom: 1.5rem; }
+    .modal-features li { padding: 0.4rem 0; color: var(--secondary); }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Payment Banner -->
+    <div class="payment-banner" id="paymentBanner">
+      🎉 Free trial used! <a onclick="showPaymentModal()">Unlock full access</a>
+    </div>
+    
+    <!-- Header -->
+    <header>
+      <div class="header-row">
+        <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">←</button>
+        <div class="logo">🍽️ <span>Restaurant</span> AI</div>
+        <button class="header-btn" onclick="showPage('settings')">⚙️</button>
+      </div>
+    </header>
+    
+    <!-- Restaurant Name Bar -->
+    <div class="resto-bar">
+      <label>Restaurant:</label>
+      <input type="text" id="restaurantName" placeholder="Enter restaurant name..." onchange="saveRestaurantName()">
+    </div>
+    
+    <!-- Pages Container -->
+    <div class="pages">
+      <!-- Home / Tools Page -->
+      <div id="page-home" class="page active">
+        <!-- Trial Info -->
+        <div class="trial-info" id="trialInfo">
+          <div class="trial-text" id="trialText">You have X free generations left</div>
+          <button class="trial-btn" id="trialBtn" onclick="showPaymentModal()">Unlock Full Access</button>
+        </div>
+        
+        <div class="tools-grid">
+          <div class="tool-card" onclick="openTool('job')">
+            <div class="tool-card-icon">📋</div>
+            <div class="tool-card-title">Job Posts</div>
+            <div class="tool-card-desc">Create job listings</div>
+          </div>
+          <div class="tool-card" onclick="openTool('review')">
+            <div class="tool-card-icon">⭐</div>
+            <div class="tool-card-title">Review Response</div>
+            <div class="tool-card-desc">Reply to reviews</div>
+          </div>
+          <div class="tool-card" onclick="openTool('social')">
+            <div class="tool-card-icon">📱</div>
+            <div class="tool-card-title">Social Media</div>
+            <div class="tool-card-desc">Engaging posts</div>
+          </div>
+          <div class="tool-card" onclick="openTool('menu')">
+            <div class="tool-card-icon">🍜</div>
+            <div class="tool-card-title">Menu Items</div>
+            <div class="tool-card-desc">Dish descriptions</div>
+          </div>
+          <div class="tool-card" onclick="openTool('email')">
+            <div class="tool-card-icon">✉️</div>
+            <div class="tool-card-title">Email Marketing</div>
+            <div class="tool-card-desc">Promotions & newsletters</div>
+          </div>
+          <div class="tool-card" onclick="openTool('special')">
+            <div class="tool-card-icon">🖼️</div>
+            <div class="tool-card-title">Special Creator</div>
+            <div class="tool-card-desc">Menu graphics</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Job Post Tool -->
+      <div id="page-job" class="page tool-page">
+        <h1>📋 Job Post</h1>
+        <p class="subtitle">Create a professional job posting</p>
+        
+        <div class="form-card">
+          <div class="form-group">
+            <label>Job Title</label>
+            <input type="text" id="job-title" placeholder="e.g., Line Cook, Server">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="job-location" placeholder="e.g., Downtown Seattle">
+          </div>
+          <div class="form-group">
+            <label>Requirements</label>
+            <textarea id="job-requirements" placeholder="• 2+ years experience&#10;• Food handler cert"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Wage Range (optional)</label>
+            <input type="text" id="job-wage" placeholder="e.g., $18-22/hour">
+          </div>
+          <button class="btn btn-primary" onclick="generateJobPost()">Generate</button>
+          
+          <div class="result-box" id="job-result">
+            <h4>Your Job Post</h4>
+            <div class="result-content" id="job-output"></div>
+            <div class="result-actions">
+              <button class="btn btn-outline" onclick="copyResult('job-output')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Review Response Tool -->
+      <div id="page-review" class="page tool-page">
+        <h1>⭐ Review Response</h1>
+        <p class="subtitle">Respond to customer reviews</p>
+        
+        <div class="form-card">
+          <div class="form-group">
+            <label>Review Text</label>
+            <textarea id="review-text" placeholder="Paste the review here..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Star Rating</label>
+            <select id="review-rating">
+              <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+              <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+              <option value="3">⭐⭐⭐ (3 stars)</option>
+              <option value="2">⭐⭐ (2 stars)</option>
+              <option value="1">⭐ (1 star)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tone</label>
+            <div class="tone-options" id="review-tones">
+              <div class="tone-option selected" data-tone="warm">Warm</div>
+              <div class="tone-option" data-tone="professional">Professional</div>
+              <div class="tone-option" data-tone="apologetic">Apologetic</div>
+              <div class="tone-option" data-tone="witty">Witty</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="generateReviewResponse()">Generate</button>
+          
+          <div class="result-box" id="review-result">
+            <h4>Your Response</h4>
+            <div class="result-content" id="review-output"></div>
+            <div class="result-actions">
+              <button class="btn btn-outline" onclick="copyResult('review-output')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Social Media Tool -->
+      <div id="page-social" class="page tool-page">
+        <h1>📱 Social Media</h1>
+        <p class="subtitle">Create engaging social posts</p>
+        
+        <div class="form-card">
+          <div class="form-group">
+            <label>Platform</label>
+            <select id="social-platform">
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="google">Google Business</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Topic</label>
+            <input type="text" id="social-topic" placeholder="e.g., New menu item, Weekly special">
+          </div>
+          <div class="form-group">
+            <label>Details (optional)</label>
+            <textarea id="social-details" placeholder="Any details to include..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="generateSocialPost()">Generate</button>
+          
+          <div class="result-box" id="social-result">
+            <h4>Your Post</h4>
+            <div class="result-content" id="social-output"></div>
+            <div class="result-actions">
+              <button class="btn btn-outline" onclick="copyResult('social-output')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Menu Description Tool -->
+      <div id="page-menu" class="page tool-page">
+        <h1>🍜 Menu Descriptions</h1>
+        <p class="subtitle">Write mouth-watering dish descriptions</p>
+        
+        <div class="form-card">
+          <div class="form-group">
+            <label>Dish Name</label>
+            <input type="text" id="menu-dish" placeholder="e.g., Truffle Parmesan Fries">
+          </div>
+          <div class="form-group">
+            <label>Ingredients</label>
+            <input type="text" id="menu-ingredients" placeholder="e.g., potatoes, truffle oil, parmesan">
+          </div>
+          <div class="form-group">
+            <label>Cuisine</label>
+            <select id="menu-cuisine">
+              <option value="american">American</option>
+              <option value="italian">Italian</option>
+              <option value="mexican">Mexican</option>
+              <option value="asian">Asian</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="generateMenuDescription()">Generate</button>
+          
+          <div class="result-box" id="menu-result">
+            <h4>Your Description</h4>
+            <div class="result-content" id="menu-output"></div>
+            <div class="result-actions">
+              <button class="btn btn-outline" onclick="copyResult('menu-output')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Email Tool -->
+      <div id="page-email" class="page tool-page">
+        <h1>✉️ Email Marketing</h1>
+        <p class="subtitle">Create promotional emails</p>
+        
+        <div class="form-card">
+          <div class="form-group">
+            <label>Email Type</label>
+            <select id="email-type">
+              <option value="promo">Promotional</option>
+              <option value="newsletter">Newsletter</option>
+              <option value="event">Event</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Context / Details</label>
+            <textarea id="email-context" placeholder="e.g., 20% off for Valentine's Day"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="generateEmail()">Generate</button>
+          
+          <div class="result-box" id="email-result">
+            <h4>Your Email</h4>
+            <div class="result-content" id="email-output"></div>
+            <div class="result-actions">
+              <button class="btn btn-outline" onclick="copyResult('email-output')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Special Creator Tool -->
+      <div id="page-special" class="page tool-page">
+        <h1>🖼️ Special Creator</h1>
+        <p class="subtitle">Create menu item graphics</p>
+        
+        <div class="form-card">
+          <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" id="special-name" placeholder="e.g., Spicy Chicken Sandwich">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="special-desc" placeholder="Describe the dish..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="special-price" placeholder="e.g., $14.99">
+          </div>
+          <button class="btn btn-primary" onclick="generateSpecial()">Create Special</button>
+          
+          <div class="result-box" id="special-result">
+            <h4>Your Special</h4>
+            <div class="result-content" id="special-output"></div>
+            <div class="result-actions">
+              <button class="btn btn-outline" onclick="copyResult('special-output')">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- History Page -->
+      <div id="page-history" class="page">
+        <h1 style="font-size:1.4rem;margin-bottom:1rem;">📜 History</h1>
+        <div id="generations-list"></div>
+      </div>
+      
+      <!-- Settings Page -->
+      <div id="page-settings" class="page">
+        <h1 style="font-size:1.4rem;margin-bottom:1.25rem;">⚙️ Settings</h1>
+        
+        <div class="settings-section">
+          <button class="btn logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bottom Tab Bar -->
+    <nav class="tab-bar">
+      <button class="tab-item active" data-page="home" onclick="showPage('home')">
+        <span class="tab-icon">🏠</span>
+        <span>Tools</span>
+      </button>
+      <button class="tab-item" data-page="history" onclick="showPage('history')">
+        <span class="tab-icon">📜</span>
+        <span>History</span>
+      </button>
+      <button class="tab-item" data-page="settings" onclick="showPage('settings')">
+        <span class="tab-icon">⚙️</span>
+        <span>More</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+      <h2>Unlock Full Access</h2>
+      <p>Get unlimited generations for your restaurant</p>
+      <div class="price">$97</div>
+      <div class="price-period">one-time payment</div>
+      <ul class="modal-features">
+        <li>✓ Unlimited job posts</li>
+        <li>✓ Unlimited review responses</li>
+        <li>✓ Unlimited social media posts</li>
+        <li>✓ Unlimited menu descriptions</li>
+        <li>✓ Unlimited email marketing</li>
+        <li>✓ All future updates free</li>
+      </ul>
+      <button class="btn btn-full" onclick="initiatePayment()">Buy Now</button>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    
+    // Check auth on load
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          currentUser = await res.json();
+          initApp();
+        } else {
+          window.location.href = '/';
+        }
+      } catch(e) {
+        window.location.href = '/';
+      }
+    }
+    
+    function initApp() {
+      // Set restaurant name
+      document.getElementById('restaurantName').value = currentUser.restaurantName || '';
+      
+      // Update trial info
+      updateTrialInfo();
+    }
+    
+    function updateTrialInfo() {
+      const trialInfo = document.getElementById('trialInfo');
+      const trialText = document.getElementById('trialText');
+      const trialBtn = document.getElementById('trialBtn');
+      const paymentBanner = document.getElementById('paymentBanner');
+      
+      if (currentUser.paid) {
+        trialInfo.classList.add('paid');
+        trialText.textContent = '✓ Full access unlocked';
+        trialBtn.style.display = 'none';
+        paymentBanner.classList.remove('show');
+      } else if (currentUser.freeTrialUsed >= 5) {
+        trialInfo.style.display = 'none';
+        paymentBanner.classList.add('show');
+      } else {
+        trialText.textContent = `You have ${5 - currentUser.freeTrialUsed} free generations left`;
+        trialBtn.textContent = 'Unlock Full Access';
+        trialBtn.style.display = 'inline-block';
+        paymentBanner.classList.remove('show');
+      }
+    }
+    
+    function showPaymentModal() {
+      document.getElementById('paymentModal').classList.add('show');
+    }
+    
+    document.getElementById('paymentModal').addEventListener('click', (e) => {
+      if (e.target.id === 'paymentModal') {
+        document.getElementById('paymentModal').classList.remove('show');
+      }
+    });
+    
+    async function initiatePayment() {
+      try {
+        const res = await fetch('/api/payment/checkout', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.url) {
+          // In production, redirect to Stripe
+          // For demo, simulate success
+          alert('Payment link: ' + data.url + '\n\nIn production, this would open Stripe checkout.');
+          
+          // Simulate payment success (for demo)
+          currentUser.paid = true;
+          updateTrialInfo();
+          document.getElementById('paymentModal').classList.remove('show');
+        }
+      } catch(e) {
+        alert('Payment error: ' + e.message);
+      }
+    }
+    
+    // Get restaurant name from localStorage
+    function getRestaurantName() {
+      return localStorage.getItem('restaurantName') || '';
+    }
+    
+    async function saveRestaurantName() {
+      const name = document.getElementById('restaurantName').value;
+      localStorage.setItem('restaurantName', name);
+      
+      // Save to server
+      try {
+        await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ restaurantName: name })
+        });
+      } catch(e) {
+        console.error('Failed to save restaurant name');
+      }
+    }
+    
+    // Page navigation
+    let pageStack = ['home'];
+    
+    function showPage(pageId, addToStack = true) {
+      const pages = document.querySelectorAll('.page');
+      const tabs = document.querySelectorAll('.tab-item');
+      
+      // Update tabs
+      tabs.forEach(t => t.classList.remove('active'));
+      const activeTab = document.querySelector(`.tab-item[data-page="${pageId}"]`);
+      if (activeTab) activeTab.classList.add('active');
+      
+      // Update pages with animation
+      const currentPage = document.querySelector('.page.active');
+      const newPage = document.getElementById('page-' + pageId);
+      
+      if (currentPage && currentPage !== newPage) {
+        currentPage.classList.remove('active');
+        currentPage.classList.add('exit');
+        setTimeout(() => currentPage.classList.remove('exit'), 300);
+      }
+      
+      newPage.classList.add('active');
+      
+      // Update back button
+      const backBtn = document.getElementById('backBtn');
+      backBtn.style.display = pageId === 'home' ? 'none' : 'block';
+      
+      if (addToStack && pageId !== 'home') {
+        pageStack.push(pageId);
+      }
+      
+      // Load history if needed
+      if (pageId === 'history') loadGenerations();
+    }
+    
+    function goBack() {
+      if (pageStack.length > 1) {
+        pageStack.pop();
+        const prevPage = pageStack[pageStack.length - 1];
+        showPage(prevPage, false);
+      }
+    }
+    
+    function openTool(tool) {
+      showPage(tool);
+    }
+    
+    // Tone selection
+    document.querySelectorAll('.tone-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        opt.parentElement.querySelectorAll('.tone-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+      });
+    });
+    
+    // Copy function
+    function copyResult(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text);
+      alert('Copied!');
+    }
+    
+    // Loading state
+    function showLoading(elementId) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = '<div class="loading"><span class="spinner"></span>Generating...</div>';
+    }
+    
+    // API call
+    async function callAPI(endpoint, data) {
+      try {
+        const response = await fetch('/api/tool/' + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        // Check for payment required
+        if (response.status === 403 && result.error === 'PAYMENT_REQUIRED') {
+          showPaymentModal();
+          throw new Error('Payment required');
+        }
+        
+        return result.response || result.error || 'Error generating content';
+      } catch(e) {
+        if (e.message !== 'Payment required') {
+          console.error('API error:', e);
+          return 'Demo mode - API connection to OpenClaw coming soon!';
+        }
+        throw e;
+      }
+    }
+    
+    // Generator functions
+    async function generateJobPost() {
+      const tool = 'job';
+      showLoading(tool + '-output');
+      document.getElementById(tool + '-result').classList.add('has-content');
+      
+      const data = {
+        title: document.getElementById('job-title').value,
+        location: document.getElementById('job-location').value,
+        requirements: document.getElementById('job-requirements').value,
+        wage: document.getElementById('job-wage').value
+      };
+      
+      const result = await callAPI('generate_job_post', data);
+      document.getElementById(tool + '-output').textContent = result;
+      saveGeneration('generate_job_post', data, result);
+      updateTrialInfo();
+    }
+    
+    async function generateReviewResponse() {
+      const tool = 'review';
+      showLoading(tool + '-output');
+      document.getElementById(tool + '-result').classList.add('has-content');
+      
+      const selectedTone = document.querySelector('#review-tones .tone-option.selected').dataset.tone;
+      const data = {
+        review: document.getElementById('review-text').value,
+        rating: document.getElementById('review-rating').value,
+        tone: selectedTone
+      };
+      
+      const result = await callAPI('generate_review_response', data);
+      document.getElementById(tool + '-output').textContent = result;
+      saveGeneration('generate_review_response', data, result);
+      updateTrialInfo();
+    }
+    
+    async function generateSocialPost() {
+      const tool = 'social';
+      showLoading(tool + '-output');
+      document.getElementById(tool + '-result').classList.add('has-content');
+      
+      const data = {
+        platform: document.getElementById('social-platform').value,
+        topic: document.getElementById('social-topic').value,
+        details: document.getElementById('social-details').value
+      };
+      
+      const result = await callAPI('generate_social_post', data);
+      document.getElementById(tool + '-output').textContent = result;
+      saveGeneration('generate_social_post', data, result);
+      updateTrialInfo();
+    }
+    
+    async function generateMenuDescription() {
+      const tool = 'menu';
+      showLoading(tool + '-output');
+      document.getElementById(tool + '-result').classList.add('has-content');
+      
+      const data = {
+        dish: document.getElementById('menu-dish').value,
+        ingredients: document.getElementById('menu-ingredients').value,
+        cuisine: document.getElementById('menu-cuisine').value
+      };
+      
+      const result = await callAPI('generate_menu_description', data);
+      document.getElementById(tool + '-output').textContent = result;
+      saveGeneration('generate_menu_description', data, result);
+      updateTrialInfo();
+    }
+    
+    async function generateEmail() {
+      const tool = 'email';
+      showLoading(tool + '-output');
+      document.getElementById(tool + '-result').classList.add('has-content');
+      
+      const data = {
+        type: document.getElementById('email-type').value,
+        context: document.getElementById('email-context').value
+      };
+      
+      const result = await callAPI('generate_email', data);
+      document.getElementById(tool + '-output').textContent = result;
+      saveGeneration('generate_email', data, result);
+      updateTrialInfo();
+    }
+    
+    async function generateSpecial() {
+      const tool = 'special';
+      showLoading(tool + '-output');
+      document.getElementById(tool + '-result').classList.add('has-content');
+      
+      const data = {
+        name: document.getElementById('special-name').value,
+        description: document.getElementById('special-desc').value,
+        price: document.getElementById('special-price').value
+      };
+      
+      const result = await callAPI('generate_special', data);
+      document.getElementById(tool + '-output').textContent = result;
+      saveGeneration('generate_special', data, result);
+      updateTrialInfo();
+    }
+    
+    // History / Generations
+    async function loadGenerations() {
+      try {
+        const res = await fetch('/api/generations');
+        const gens = await res.json();
+        const container = document.getElementById('generations-list');
+        
+        if (!gens || gens.length === 0) {
+          container.innerHTML = '<div class="history-empty"><div class="history-empty-icon">📭</div>No generations yet</div>';
+          return;
+        }
+        
+        const toolNames = {
+          'generate_job_post': '📋 Job Post',
+          'generate_review_response': '⭐ Review',
+          'generate_social_post': '📱 Social',
+          'generate_menu_description': '🍜 Menu',
+          'generate_email': '✉️ Email',
+          'generate_special': '🖼️ Special'
+        };
+        
+        container.innerHTML = gens.slice(0, 20).map(g => {
+          const time = new Date(g.created).toLocaleString();
+          const preview = g.output ? g.output.substring(0, 80) + '...' : '';
+          return `<div class="history-item" onclick="loadGeneration('${g.id}')">
+            <div class="history-header">
+              <span class="history-tool">${toolNames[g.tool] || g.tool}</span>
+              <span class="history-time">${time}</span>
+            </div>
+            <div class="history-preview">${preview}</div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        console.error('Load generations error:', e);
+      }
+    }
+    
+    async function loadGeneration(id) {
+      try {
+        const res = await fetch('/api/generations/' + id);
+        const gen = await res.json();
+        
+        const toolMap = {
+          'generate_job_post': 'job',
+          'generate_review_response': 'review',
+          'generate_social_post': 'social',
+          'generate_menu_description': 'menu',
+          'generate_email': 'email',
+          'generate_special': 'special'
+        };
+        
+        const tool = toolMap[gen.tool];
+        if (!tool) return;
+        
+        showPage(tool);
+        
+        const input = gen.input;
+        if (tool === 'job') {
+          document.getElementById('job-title').value = input.title || '';
+          document.getElementById('job-location').value = input.location || '';
+          document.getElementById('job-requirements').value = input.requirements || '';
+          document.getElementById('job-wage').value = input.wage || '';
+        } else if (tool === 'review') {
+          document.getElementById('review-text').value = input.review || '';
+          document.getElementById('review-rating').value = input.rating || '5';
+        } else if (tool === 'social') {
+          document.getElementById('social-platform').value = input.platform || 'instagram';
+          document.getElementById('social-topic').value = input.topic || '';
+          document.getElementById('social-details').value = input.details || '';
+        } else if (tool === 'menu') {
+          document.getElementById('menu-dish').value = input.dish || '';
+          document.getElementById('menu-ingredients').value = input.ingredients || '';
+          document.getElementById('menu-cuisine').value = input.cuisine || '';
+        } else if (tool === 'email') {
+          document.getElementById('email-type').value = input.type || 'promotion';
+          document.getElementById('email-context').value = input.context || '';
+        } else if (tool === 'special') {
+          document.getElementById('special-name').value = input.name || '';
+          document.getElementById('special-desc').value = input.description || '';
+          document.getElementById('special-price').value = input.price || '';
+        }
+        
+        document.getElementById(tool + '-output').textContent = gen.output;
+        document.getElementById(tool + '-result').classList.add('has-content');
+      } catch(e) {
+        console.error('Load generation error:', e);
+      }
+    }
+    
+    async function saveGeneration(tool, input, output) {
+      try {
+        await fetch('/api/generations/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tool, input, output })
+        });
+      } catch(e) {
+        console.error('Save generation error:', e);
+      }
+    }
+    
+    function logout() {
+      fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/';
+    }
+    
+    // Start
+    checkAuth();
+  </script>
+</body>
+</html>

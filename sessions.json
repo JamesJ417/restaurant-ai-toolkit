@@ -1,0 +1,47 @@
+{
+  "c7a797b1-cf7a-4a55-8500-1cf706bc3345": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774385786394
+  },
+  "627a21ca-fe6b-4114-ae12-cfe4e5a81961": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774385807431
+  },
+  "54d82111-f7e2-49be-b6e0-35e82fee3c72": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774389929927
+  },
+  "5273f97f-eed0-4eec-9b21-b9bd49406b3d": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774389951740
+  },
+  "318d7133-3282-4bee-829e-cea98b73313e": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774389977865
+  },
+  "65963011-fd11-4b54-8220-50c50dcda978": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774389982578
+  },
+  "e9bdda20-3371-4fb8-aad7-cdb11b070838": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774390025850
+  },
+  "2ffa9597-ce71-49cd-a8a4-2e8f99f219f6": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774391003091
+  },
+  "9189b2e7-f82d-46b2-8105-91314d78df15": {
+    "userId": 1,
+    "email": "james@restaurant.com",
+    "expires": 1774392183161
+  }
+}

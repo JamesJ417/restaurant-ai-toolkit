@@ -1,0 +1,579 @@
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+const crypto = require('crypto');
+
+const PORT = 18790;
+const APP_DIR = __dirname;
+
+// In-memory store (would be a database in production)
+const users = {};
+const sessions = {};
+const generations = {};
+let userIdCounter = 1;
+
+// Load existing data
+function loadData() {
+  try {
+    if (fs.existsSync(path.join(APP_DIR, 'users.json'))) {
+      const data = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'users.json'), 'utf8'));
+      Object.assign(users, data);
+      userIdCounter = Math.max(...Object.keys(users).map(Number), 0) + 1;
+    }
+  } catch(e) { console.log('No existing users'); }
+  
+  try {
+    if (fs.existsSync(path.join(APP_DIR, 'sessions.json'))) {
+      const data = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'sessions.json'), 'utf8'));
+      Object.assign(sessions, data);
+    }
+  } catch(e) { console.log('No existing sessions'); }
+  
+  try {
+    if (fs.existsSync(path.join(APP_DIR, 'generations.json'))) {
+      const data = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'generations.json'), 'utf8'));
+      Object.assign(generations, data);
+    }
+  } catch(e) { console.log('No existing generations'); }
+}
+
+function saveData() {
+  fs.writeFileSync(path.join(APP_DIR, 'users.json'), JSON.stringify(users, null, 2));
+  fs.writeFileSync(path.join(APP_DIR, 'sessions.json'), JSON.stringify(sessions, null, 2));
+  fs.writeFileSync(path.join(APP_DIR, 'generations.json'), JSON.stringify(generations, null, 2));
+}
+
+// Initialize
+loadData();
+
+// Tool prompts
+const TOOL_PROMPTS = {
+  generate_job_post: `You are a restaurant owner creating a job post. Make it engaging and professional.`,
+  generate_review_response: `You are a restaurant owner responding to online reviews. Your task is to:
+1. Thank the customer for specific positive comments
+2. Address any negative feedback with empathy
+3. Invite them back
+4. Sign off as "The [Restaurant Name] Team"`,
+  generate_social_post: `You are a restaurant social media manager. Create engaging, platform-appropriate posts.`,
+  generate_menu_description: `You are a restaurant menu writer. Create mouth-watering, appetizing descriptions.`,
+  generate_email: `You are a restaurant owner writing marketing emails. Professional, engaging, clear call to action.`,
+  generate_special: `You are a restaurant owner creating a special menu item description. Make it mouth-watering and appealing.`,
+};
+
+function buildToolPrompt(toolName, input) {
+  const basePrompt = TOOL_PROMPTS[toolName] || 'You are a helpful assistant.';
+  
+  let context = '\n\nInput data:\n';
+  for (const [key, value] of Object.entries(input)) {
+    if (value) context += `- ${key}: ${value}\n`;
+  }
+  
+  let outputFormat = '';
+  switch(toolName) {
+    case 'generate_job_post':
+      outputFormat = '\n\nCreate a 200-400 word job post. Include restaurant name naturally. Add: job summary, responsibilities, requirements, benefits, and how to apply.';
+      break;
+    case 'generate_review_response':
+      outputFormat = '\n\nWrite a 50-200 word response. Match the requested tone. Be specific to the review content. Use the restaurant name. Sign off as "The [Restaurant Name] Team".';
+      break;
+    case 'generate_social_post':
+      outputFormat = '\n\nCreate a platform-appropriate post. Keep it natural and engaging. Use the restaurant name.';
+      break;
+    case 'generate_menu_description':
+      outputFormat = '\n\nWrite a 25-75 word appetizing description. Make it mouth-watering.';
+      break;
+    case 'generate_email':
+      outputFormat = '\n\nWrite a 100-400 word email. Professional, engaging, with clear call to action. Use the restaurant name.';
+      break;
+    case 'generate_special':
+      outputFormat = '\n\nCreate a menu special description. Include name, description, price. Make it appetizing.';
+      break;
+  }
+  
+  return basePrompt + context + outputFormat;
+}
+
+// Call OpenClaw agent
+function callAgent(agentId, prompt) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('openclaw', ['agent', '--agent', agentId, '--message', prompt, '--json'], {
+      cwd: '/home/james/.openclaw/workspace',
+      env: { ...process.env, OPENCLAW_JSON: '1' }
+    });
+    
+    let stdout = '';
+    let stderr = '';
+    
+    child.stdout.on('data', (data) => { stdout += data; });
+    child.stderr.on('data', (data) => { stderr += data; });
+    
+    child.on('close', (code) => {
+      if (code === 0 && stdout) {
+        try {
+          const json = JSON.parse(stdout);
+          if (json.result && json.result.payloads && json.result.payloads[0]) {
+            resolve(json.result.payloads[0].text);
+          } else if (json.response) {
+            resolve(json.response);
+          } else {
+            resolve(stdout.trim());
+          }
+        } catch(e) {
+          resolve(stdout.trim());
+        }
+      } else {
+        resolve('AI temporarily unavailable. Please try again.');
+      }
+    });
+    
+    child.on('error', (err) => {
+      resolve('AI connection error: ' + err.message);
+    });
+    
+    setTimeout(() => {
+      child.kill();
+      resolve('AI request timed out');
+    }, 45000);
+  });
+}
+
+// HTTP Server
+const server = http.createServer((req, res) => {
+  const parsed = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = parsed.pathname;
+  const query = parsed.searchParams;
+  
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
+  
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+  
+  console.log(`${req.method} ${pathname}`);
+  
+  // ==================== AUTH API ====================
+  
+  // Signup
+  if (req.method === 'POST' && pathname === '/api/auth/signup') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { email, password, restaurantName } = JSON.parse(body);
+        
+        // Check if user exists
+        const existingUser = Object.values(users).find(u => u.email === email);
+        if (existingUser) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Email already registered' }));
+          return;
+        }
+        
+        const userId = userIdCounter++;
+        const user = {
+          id: userId,
+          email,
+          password, // In production, hash this!
+          restaurantName: restaurantName || '',
+          paid: false,
+          freeTrialUsed: 0,
+          created: new Date().toISOString()
+        };
+        
+        users[userId] = user;
+        generations[userId] = [];
+        
+        // Create session
+        const sessionId = crypto.randomUUID();
+        sessions[sessionId] = {
+          userId,
+          email,
+          expires: Date.now() + (7 * 24 * 60 * 60 * 1000)
+        };
+        
+        saveData();
+        
+        res.writeHead(200, { 
+          'Content-Type': 'application/json',
+          'Set-Cookie': `session=${sessionId}; Path=/; Max-Age=${7*24*60*60}; SameSite=Lax`
+        });
+        res.end(JSON.stringify({ 
+          success: true, 
+          user: { id: userId, email, restaurantName, paid: false, freeTrialUsed: 0 },
+          sessionId
+        }));
+      } catch(e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+  
+  // Login
+  if (req.method === 'POST' && pathname === '/api/auth/login') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { email, password } = JSON.parse(body);
+        
+        const user = Object.values(users).find(u => u.email === email && u.password === password);
+        
+        if (!user) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid email or password' }));
+          return;
+        }
+        
+        // Create session
+        const sessionId = crypto.randomUUID();
+        sessions[sessionId] = {
+          userId: user.id,
+          email,
+          expires: Date.now() + (7 * 24 * 60 * 60 * 1000)
+        };
+        
+        saveData();
+        
+        res.writeHead(200, { 
+          'Content-Type': 'application/json',
+          'Set-Cookie': `session=${sessionId}; Path=/; Max-Age=${7*24*60*60}; SameSite=Lax`
+        });
+        res.end(JSON.stringify({ 
+          success: true, 
+          user: { id: user.id, email: user.email, restaurantName: user.restaurantName, paid: user.paid, freeTrialUsed: user.freeTrialUsed },
+          sessionId
+        }));
+      } catch(e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+  
+  // Logout
+  if (req.method === 'POST' && pathname === '/api/auth/logout') {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    if (sessionMatch) {
+      delete sessions[sessionMatch[1]];
+      saveData();
+    }
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+  
+  // Get current user
+  if (req.method === 'GET' && pathname === '/api/auth/me') {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]] || Date.now() > sessions[sessionMatch[1]].expires) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Not logged in' }));
+      return;
+    }
+    
+    const session = sessions[sessionMatch[1]];
+    const user = users[session.userId];
+    
+    if (!user) {
+      res.writeHead(401);
+      res.end();
+      return;
+    }
+    
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      id: user.id, 
+      email: user.email, 
+      restaurantName: user.restaurantName, 
+      paid: user.paid,
+      freeTrialUsed: user.freeTrialUsed 
+    }));
+    return;
+  }
+  
+  // Update user profile
+  if (req.method === 'PUT' && pathname === '/api/auth/profile') {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]]) {
+      res.writeHead(401);
+      res.end();
+      return;
+    }
+    
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const session = sessions[sessionMatch[1]];
+      const user = users[session.userId];
+      const updates = JSON.parse(body);
+      
+      if (updates.restaurantName) user.restaurantName = updates.restaurantName;
+      if (updates.paid !== undefined) user.paid = updates.paid;
+      if (updates.freeTrialUsed !== undefined) user.freeTrialUsed = updates.freeTrialUsed;
+      
+      saveData();
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
+  // ==================== PAYMENT API ====================
+  
+  // Create Stripe checkout session
+  if (req.method === 'POST' && pathname === '/api/payment/checkout') {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]]) {
+      res.writeHead(401);
+      res.end();
+      return;
+    }
+    
+    // In production, you'd use the Stripe SDK to create a real checkout session
+    // For now, return a demo response
+    const session = sessions[sessionMatch[1]];
+    const user = users[session.userId];
+    
+    // Simulate Stripe checkout - in production use:
+    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    // const session = await stripe.checkout.sessions.create({...});
+    
+    const checkoutUrl = `https://buy.stripe.com/test_demo_${user.id}`;
+    
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      url: checkoutUrl,
+      message: 'Stripe checkout would open here in production'
+    }));
+    return;
+  }
+  
+  // Mark as paid (webhook simulation)
+  if (req.method === 'POST' && pathname === '/api/payment/webhook') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      // In production, verify Stripe webhook signature
+      try {
+        const { userId } = JSON.parse(body);
+        if (users[userId]) {
+          users[userId].paid = true;
+          saveData();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(404);
+          res.end();
+        }
+      } catch(e) {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+    return;
+  }
+  
+  // ==================== GENERATIONS API ====================
+  
+  // Get user's generations
+  if (req.method === 'GET' && pathname === '/api/generations') {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]]) {
+      res.writeHead(401);
+      res.end();
+      return;
+    }
+    
+    const session = sessions[sessionMatch[1]];
+    const userGens = generations[session.userId] || [];
+    
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(userGens));
+    return;
+  }
+  
+  // Get single generation
+  if (req.method === 'GET' && pathname.startsWith('/api/generations/')) {
+    const id = pathname.split('/').pop();
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]]) {
+      res.writeHead(401);
+      res.end();
+      return;
+    }
+    
+    const session = sessions[sessionMatch[1]];
+    const userGens = generations[session.userId] || [];
+    const gen = userGens.find(g => g.id === id);
+    
+    if (!gen) {
+      res.writeHead(404);
+      res.end();
+      return;
+    }
+    
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(gen));
+    return;
+  }
+  
+  // Save generation
+  if (req.method === 'POST' && pathname === '/api/generations/save') {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]]) {
+      res.writeHead(401);
+      res.end();
+      return;
+    }
+    
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { tool, input, output } = JSON.parse(body);
+        const session = sessions[sessionMatch[1]];
+        
+        if (!generations[session.userId]) generations[session.userId] = [];
+        
+        const gen = {
+          id: Date.now().toString(),
+          tool,
+          input,
+          output,
+          created: new Date().toISOString()
+        };
+        
+        generations[session.userId].unshift(gen);
+        
+        // Keep only last 50
+        if (generations[session.userId].length > 50) {
+          generations[session.userId] = generations[session.userId].slice(0, 50);
+        }
+        
+        saveData();
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(gen));
+      } catch(e) {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+    return;
+  }
+  
+  // ==================== TOOL API ====================
+  
+  // Generate content
+  if (req.method === 'POST' && pathname.startsWith('/api/tool/')) {
+    const cookie = req.headers.cookie || '';
+    const sessionMatch = cookie.match(/session=([^;]+)/);
+    
+    if (!sessionMatch || !sessions[sessionMatch[1]]) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Please log in' }));
+      return;
+    }
+    
+    const session = sessions[sessionMatch[1]];
+    const user = users[session.userId];
+    
+    // Check payment status
+    if (!user.paid && user.freeTrialUsed >= 5) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'PAYMENT_REQUIRED', message: 'Free trial used. Please purchase to continue.' }));
+      return;
+    }
+    
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const toolName = pathname.replace('/api/tool/', '');
+        const input = JSON.parse(body);
+        
+        // Add restaurant name to input
+        input.restaurantName = user.restaurantName;
+        
+        const prompt = buildToolPrompt(toolName, input);
+        const response = await callAgent('restaurant', prompt);
+        
+        // Use free trial if not paid
+        if (!user.paid && !user.freeTrialUsed) {
+          user.freeTrialUsed += 1;
+          saveData();
+        }
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          response,
+          freeTrialUsed: user.freeTrialUsed,
+          paid: user.paid
+        }));
+      } catch(e) {
+        console.error('Tool error:', e);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+  
+  // ==================== STATIC FILES ====================
+  
+  // Serve static files
+  let filePath = path.join(APP_DIR, pathname === '/' ? 'index.html' : pathname);
+  
+  if (!fs.existsSync(filePath)) {
+    res.writeHead(404);
+    res.end('Not found');
+    return;
+  }
+  
+  const ext = path.extname(filePath);
+  const contentTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg'
+  };
+  
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(500);
+      res.end('Error loading file');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'text/plain' });
+    res.end(data);
+  });
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Restaurant AI Toolkit running on port ${PORT}`);
+});

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant AI Toolkit - Marketing Made Simple</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #FF6B35;
+      --primary-dark: #E55A2B;
+      --secondary: #1A1A2E;
+      --accent: #16213E;
+      --light: #F8F9FA;
+      --white: #FFFFFF;
+      --gray: #6B7280;
+      --success: #10B981;
+      --border: #E5E7EB;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--secondary);
+      line-height: 1.6;
+      background: var(--light);
+      overflow-x: hidden;
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate { animation: fadeInUp 0.6s ease forwards; }
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .delay-4 { animation-delay: 0.4s; opacity: 0; }
+    
+    /* Header */
+    header {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--secondary);
+    }
+    .logo span { color: var(--primary); }
+    .header-cta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .urgency {
+      background: #FEF3C7;
+      color: #92400E;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .cta-btn {
+      background: var(--primary);
+      color: var(--white);
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .cta-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      color: var(--white);
+      padding: 4rem 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,107,53,0.1) 0%, transparent 50%);
+      animation: pulse 8s ease-in-out infinite;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(255,255,255,0.85);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .hero-btn {
+      padding: 1rem 2.5rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    .hero-btn-primary {
+      background: var(--primary);
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(255,107,53,0.4);
+    }
+    .hero-btn-primary:hover { 
+      background: var(--primary-dark); 
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(255,107,53,0.5);
+    }
+    .hero-btn-secondary {
+      background: rgba(255,255,255,0.12);
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+    .hero-btn-secondary:hover { 
+      background: rgba(255,255,255,0.2); 
+    }
+    .hero-sub {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+    }
+    .hero-sub strong { color: var(--primary); }
+    
+    /* Phone Mockup */
+    .phone-mockup {
+      max-width: 300px;
+      margin: 3rem auto 0;
+      background: #1a1a2e;
+      border-radius: 36px;
+      padding: 8px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      border: 3px solid #333;
+      animation: fadeInUp 0.8s ease 0.3s forwards;
+      opacity: 0;
+    }
+    .phone-screen {
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 28px;
+      overflow: hidden;
+      min-height: 520px;
+    }
+    .phone-header {
+      background: #1a1a2e;
+      padding: 1rem;
+      text-align: center;
+    }
+    .phone-logo {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .phone-logo span { color: #FF6B35; }
+    .phone-bar {
+      background: #16213e;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .phone-bar label {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+    }
+    .phone-bar input {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    .phone-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      padding: 1rem;
+    }
+    .phone-tool {
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1rem 0.5rem;
+      text-align: center;
+    }
+    .phone-tool-icon {
+      font-size: 1.75rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .phone-tool-name {
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .phone-nav {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: space-around;
+      padding: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .phone-nav-item {
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.6rem;
+    }
+    .phone-nav-item.active {
+      color: #FF6B35;
+    }
+    
+    /* Features */
+    .features {
+      padding: 5rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .section-title h2 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+    .section-title p {
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      transition: all 0.3s;
+      border: 1px solid var(--border);
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    }
+    .feature-icon {
+      font-size: 2.75rem;
+      margin-bottom: 1rem;
+    }
+    .feature-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .feature-card p {
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+    
+    /* Before/After */
+    .comparison {
+      background: var(--white);
+      padding: 5rem 1.5rem;
+    }
+    .comparison-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+    .comparison-card {
+      background: var(--light);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .comparison-card.bad { border-top: 4px solid #EF4444; }
+    .comparison-card.good { border-top: 4px solid var(--success); }
+    .comparison-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .comparison-card.bad .comparison-label { color: #EF4444; }
+    .comparison-card.good .comparison-label { color: var(--success); }
+    .comparison-arrow {
+      font-size: 2rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .comparison-content {
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .comparison-content.bad { color: #777; }
+    .comparison-content.good { color: var(--secondary); }
+    
+    /* Trust */
+    .trust {
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .trust-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .trust-stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .stat-label {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.95rem;
+    }
+    .trust-quote {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.1rem;
+      font-style: italic;
+    }
+    
+    /* Pricing */
+    .pricing {
+      padding: 5rem 1.5rem;
+    }
+    .pricing-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .price-card {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 3rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      border: 3px solid var(--primary);
+      position: relative;
+      overflow: hidden;
+    }
+    .price-badge {
+      position: absolute;
+      top: 20px;
+      right: -35px;
+      background: var(--primary);
+      color: var(--white);
+      padding: 0.5rem 3rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transform: rotate(45deg);
+    }
+    .price-label {
+      display: inline-block;
+      background: #FEF3C7;
+      color: #92400E;
+      padding: 0.4rem 1.2rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .price {
+      font-size: 4rem;
+      font-weight: 800;
+      color: var(--secondary);
+      line-height: 1;
+    }
+    .price-period {
+      color: var(--gray);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .price-desc {
+      color: var(--gray);
+      margin-bottom: 1.5rem;
+    }
+    .price-features {
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+    .price-features li {
+      padding: 0.6rem 0;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1rem;
+    }
+    .price-features li::before {
+      content: '✓';
+      color: var(--success);
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .guarantee {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--gray);
+    }
+    .guarantee strong { color: var(--success); }
+    
+    /* FAQ */
+    .faq {
+      background: var(--white);
+      padding: 5rem 1.5rem;
+    }
+    .faq-inner {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-question {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--secondary);
+    }
+    .faq-answer {
+      color: var(--gray);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    
+    /* CTA */
+    .cta-section {
+      background: var(--secondary);
+      color: var(--white);
+      padding: 5rem 1.5rem;
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .cta-section p {
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 2rem;
+      font-size: 1.15rem;
+    }
+    
+    /* Footer */
+    footer {
+      background: var(--accent);
+      color: rgba(255,255,255,0.5);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    
+    /* Mobile */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 1.05rem; }
+      .comparison-grid { grid-template-columns: 1fr; }
+      .comparison-arrow { transform: rotate(90deg); padding: 0.5rem 0; }
+      .trust-stats { gap: 2rem; }
+      .price { font-size: 3rem; }
+      .header-cta .urgency { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo">🍽️ <span>Restaurant</span> AI</div>
+      <div class="header-cta">
+        <span class="urgency">🎁 5 Free Trials</span>
+        <a href="/" class="cta-btn">Try Free</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="animate">Marketing Your Restaurant,<br><span>Without the Headache</span></h1>
+      <p class="animate delay-1">Create professional job posts, respond to reviews, write social media content, and more — in minutes, not hours.</p>
+      <div class="hero-btns animate delay-2">
+        <a href="/" class="hero-btn hero-btn-primary">Start Free Trial</a>
+        <a href="#pricing" class="hero-btn hero-btn-secondary">See Pricing</a>
+      </div>
+      <p class="hero-sub animate delay-3">Save 20+ hours/month on marketing • <strong>Pay back in under 3 months</strong></p>
+      
+      <div class="phone-mockup">
+        <div class="phone-screen">
+          <div class="phone-header">
+            <div class="phone-logo">🍽️ <span>Restaurant</span> AI</div>
+          </div>
+          <div class="phone-bar">
+            <label>Restaurant:</label>
+            <input type="text" value="Joe's Pizza" readonly>
+          </div>
+          <div class="phone-grid">
+            <div class="phone-tool">
+              <span class="phone-tool-icon">📋</span>
+              <span class="phone-tool-name">Jobs</span>
+            </div>
+            <div class="phone-tool">
+              <span class="phone-tool-icon">⭐</span>
+              <span class="phone-tool-name">Reviews</span>
+            </div>
+            <div class="phone-tool">
+              <span class="phone-tool-icon">📱</span>
+              <span class="phone-tool-name">Social</span>
+            </div>
+            <div class="phone-tool">
+              <span class="phone-tool-icon">🍜</span>
+              <span class="phone-tool-name">Menu</span>
+            </div>
+            <div class="phone-tool">
+              <span class="phone-tool-icon">✉️</span>
+              <span class="phone-tool-name">Email</span>
+            </div>
+            <div class="phone-tool">
+              <span class="phone-tool-icon">🖼️</span>
+              <span class="phone-tool-name">Specials</span>
+            </div>
+          </div>
+          <div class="phone-nav">
+            <div class="phone-nav-item active">🏠 Tools</div>
+            <div class="phone-nav-item">📜 History</div>
+            <div class="phone-nav-item">⚙️ More</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="section-title">
+      <h2>Save 20+ Hours Every Month</h2>
+      <p>Stop spending your evenings on marketing. Get professional results in minutes.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Job Posts</h3>
+        <p>Create professional job listings that attract quality applicants — fast.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⭐</div>
+        <h3>Review Responses</h3>
+        <p>Respond to every review professionally. Never worry about typos again.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Social Media</h3>
+        <p>Engaging posts for Instagram, Facebook & Google. Stay consistent.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🍜</div>
+        <h3>Menu Descriptions</h3>
+        <p>Mouth-watering dish descriptions that sell. Make your food irresistible.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✉️</div>
+        <h3>Email Marketing</h3>
+        <p>Promotions, newsletters, and events that get customers through the door.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🖼️</div>
+        <h3>Specials & Promos</h3>
+        <p>Create eye-catching specials that demand attention.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="comparison">
+    <div class="comparison-inner">
+      <div class="section-title">
+        <h2>See the Difference</h2>
+        <p>Before and after using Restaurant AI</p>
+      </div>
+      <div class="comparison-grid">
+        <div class="comparison-card bad">
+          <div class="comparison-label">❌ Before</div>
+          <div class="comparison-content bad">
+            <strong>Line Cook</strong><br>
+            Need cook. Must be able to work. Food cert a plus. Apply in person.
+          </div>
+        </div>
+        <div class="comparison-arrow">→</div>
+        <div class="comparison-card good">
+          <div class="comparison-label">✓ After</div>
+          <div class="comparison-content good">
+            <strong>Line Cook – Quincey's Burgers</strong><br>
+            Join our award-winning team! Looking for an experienced Line Cook ($18-22/hr) who takes pride in preparing delicious food. Benefits include health insurance, flexible scheduling, and free meals. Food handler certification required. Apply today!
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <div class="trust-inner">
+      <div class="trust-stats">
+        <div class="stat">
+          <div class="stat-number">4-6</div>
+          <div class="stat-label">Hours Saved Weekly</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">20+</div>
+          <div class="stat-label">Hours/Month Saved</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">$97</div>
+          <div class="stat-label">One-Time Price</div>
+        </div>
+      </div>
+      <p class="trust-quote">"Saves me hours every week on marketing. The job posts actually work now."</p>
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <div class="pricing-inner">
+      <div class="price-card">
+        <span class="price-badge">BEST VALUE</span>
+        <span class="price-label">One-Time Payment</span>
+        <div class="price">$97</div>
+        <p class="price-period">one-time, forever</p>
+        <p class="price-desc">Everything you need to market your restaurant</p>
+        <ul class="price-features">
+          <li>Unlimited job posts</li>
+          <li>Unlimited review responses</li>
+          <li>Unlimited social media posts</li>
+          <li>Unlimited menu descriptions</li>
+          <li>Unlimited email marketing</li>
+          <li>All future updates included</li>
+        </ul>
+        <a href="/" class="cta-btn" style="display:block;padding:1.1rem;font-size:1.15rem;box-shadow:0 4px 15px rgba(255,107,53,0.3);">Start Free Trial</a>
+        <p class="guarantee"><strong>30-day money-back guarantee</strong> — no questions asked</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <div class="faq-inner">
+      <div class="section-title">
+        <h2>Frequently Asked Questions</h2>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">How does the free trial work?</div>
+        <div class="faq-answer">You get 5 free generations to try out any of our tools. No credit card required. Use them all at once or spread them out — whatever works for you.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Is it really a one-time payment?</div>
+        <div class="faq-answer">Yes! Pay $97 once and you get unlimited access forever. No monthly fees, no hidden costs. All future updates are included.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">What if I'm not satisfied?</div>
+        <div class="faq-answer">We offer a 30-day money-back guarantee. If you're not happy, email us for a full refund — no hard feelings.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Do I need any technical skills?</div>
+        <div class="faq-answer">Not at all. Just type what you need — like "write a job post for a line cook" — and our AI does the rest. It's that simple.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Can I use it for multiple restaurants?</div>
+        <div class="faq-answer">Each account is for one restaurant. If you have multiple locations, contact us for group pricing.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2>Ready to Save Time on Marketing?</h2>
+    <p>Save 20+ hours/month = <strong>$400+ value</strong> at $20/hr. Your ROI in less than 3 months.</p>
+    <a href="/" class="hero-btn hero-btn-primary">Try It Free</a>
+  </section>
+
+  <footer>
+    <p>🍽️ Restaurant AI Toolkit — Marketing made simple.</p>
+  </footer>
+</body>
+</html>

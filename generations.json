@@ -1,0 +1,42 @@
+{
+  "0": {
+    "id": "1773752767709",
+    "tool": "generate_job_post",
+    "input": {
+      "title": "Cashier",
+      "location": "Chiefland Florida ",
+      "requirements": "No experience necessary. Friendly smiles",
+      "wage": "14",
+      "restaurantName": "The Vine and Branch"
+    },
+    "output": "# Cashier Wanted — Chiefland, Florida 💵\n\n**The Vine and Branch** is looking for a friendly face to join our team in Chiefland! If you love greeting people with a smile, this is the perfect opportunity for you.\n\n## What You'll Do\n\n- Greet every guest with a warm, welcoming smile\n- Process orders accurately using our point-of-sale system\n- Handle cash, card, and digital payments\n- Answer questions about our menu and help guests with their orders\n- Keep the register area clean and organized\n- Assist with takeout orders and phone calls\n- Provide excellent customer service\n\n## What We're Looking For\n\n- **No experience necessary** — we'll train you!\n- **Friendly smiles** — a positive attitude is all you need\n- Great communication skills\n- Ability to stay calm and helpful under pressure\n- Reliability and a strong work ethic\n\n## What We Offer\n\n- **Pay: $14/hour**\n- Flexible scheduling\n- Free meals on shift\n- Fun, supportive team environment\n- Growth opportunities within The Vine and Branch\n- Paid on-the-job training\n\n## How to Apply\n\nBring your smile to The Vine and Branch! We'd love to meet you.\n\n📧 Email: **jobs@vineandbranch.com**\n📞 Call: **[Phone Number]**\n📍 Stop by: **[Address, Chiefland, FL]**\n\n**Apply today — your smile could be our newest asset!** 😊",
+    "session": "c899e9c5-f55d-41f6-acb9-31df40b8dbb9",
+    "created": "2026-03-17T13:06:07.709Z"
+  },
+  "1": {
+    "id": "1773751039486",
+    "tool": "generate_job_post",
+    "input": {
+      "title": "Cook",
+      "location": "Chiefland ",
+      "requirements": "Any ",
+      "wage": "15 +tips"
+    },
+    "output": "# Cook Wanted — Chiefland 🍳\n\n**The Vine and Branch** is looking for a **Cook** to join our kitchen team in Chiefland! Whether you're just starting your culinary journey or have years of experience, we want to hear from you.\n\n## What You'll Do\n\n- Prepare and cook menu items to our signature standards\n- Maintain a clean and organized station throughout your shift\n- Follow recipes and food safety guidelines\n- Prep ingredients and assist with inventory\n- Collaborate with the kitchen team to ensure smooth service\n- Take pride in every dish you serve\n\n## What We're Looking For\n\n- **Any experience level welcome** — if you have a passion for cooking, we want to meet you!\n- Willingness to learn and grow\n- Positive attitude and reliability\n- Ability to work in a fast-paced environment\n- Team player mindset\n\n## What We Offer\n\n- **Competitive pay: $15/hour + tips**\n- Flexible scheduling\n- Free meals on shift\n- Supportive team environment\n- Career growth opportunities\n- Paid training\n\n## How to Apply\n\nReady to cook with The Vine and Branch? We'd love to meet you!\n\n📧 Email: **jobs@vineandbranch.com**\n📞 Call: **[Phone Number]**\n📍 Stop by: **[Address, Chiefland]**\n\n**Apply now — start your culinary journey with us!** 🍽️",
+    "session": "c899e9c5-f55d-41f6-acb9-31df40b8dbb9",
+    "created": "2026-03-17T12:37:19.486Z"
+  },
+  "2": {
+    "id": "1773750132984",
+    "tool": "generate_job_post",
+    "input": {
+      "title": "Sandwich maker ",
+      "location": " Chiefland Florida ",
+      "requirements": "No experience needed \nWillingness to learn \nFriendly \nSmile back when ppl smile at you \nSay Hi",
+      "wage": "15 +tips"
+    },
+    "output": "AI temporarily unavailable. Please try again.",
+    "session": "c899e9c5-f55d-41f6-acb9-31df40b8dbb9",
+    "created": "2026-03-17T12:22:12.984Z"
+  }
+}
