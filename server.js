@@ -13,7 +13,7 @@ const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
-const isProduction = process.env.RAILWAY_ENVIRONMENT !== undefined;
+const isProduction = !!process.env.OPENAI_API_KEY;
 
 const PORT = process.env.PORT || 18790;
 const APP_DIR = __dirname;
