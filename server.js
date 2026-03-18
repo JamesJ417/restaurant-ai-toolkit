@@ -3,8 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
+const Stripe = require('stripe');
 
-const PORT = 18790;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_YOUR_KEY_HERE';
+const stripe = Stripe(STRIPE_SECRET_KEY);
+const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
+const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
+
+const PORT = process.env.PORT || 18790;
 const APP_DIR = __dirname;
 
 // In-memory store (would be a database in production)
@@ -346,43 +352,67 @@ const server = http.createServer((req, res) => {
       return;
     }
     
-    // In production, you'd use the Stripe SDK to create a real checkout session
-    // For now, return a demo response
     const session = sessions[sessionMatch[1]];
     const user = users[session.userId];
     
-    // Simulate Stripe checkout - in production use:
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    // const session = await stripe.checkout.sessions.create({...});
+    if (user.paid) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Already paid' }));
+      return;
+    }
     
-    const checkoutUrl = `https://buy.stripe.com/test_demo_${user.id}`;
-    
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ 
-      url: checkoutUrl,
-      message: 'Stripe checkout would open here in production'
-    }));
+    // Create Stripe checkout session
+    stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Restaurant AI Toolkit - Lifetime Access',
+            description: 'Unlimited job posts, review responses, social media, menu descriptions, and email marketing'
+          },
+          unit_amount: 9700, // $97.00
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${DOMAIN}/dashboard.html?paid=true`,
+      cancel_url: `${DOMAIN}/dashboard.html?cancelled=true`,
+      metadata: {
+        userId: user.id.toString()
+      }
+    }).then(checkoutSession => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ url: checkoutSession.url }));
+    }).catch(err => {
+      console.error('Stripe error:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payment error' }));
+    });
     return;
   }
   
-  // Mark as paid (webhook simulation)
+  // Stripe webhook
   if (req.method === 'POST' && pathname === '/api/payment/webhook') {
+    const sig = req.headers['stripe-signature'];
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
-      // In production, verify Stripe webhook signature
       try {
-        const { userId } = JSON.parse(body);
-        if (users[userId]) {
-          users[userId].paid = true;
-          saveData();
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true }));
-        } else {
-          res.writeHead(404);
-          res.end();
+        const event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+        if (event.type === 'checkout.session.completed') {
+          const session = event.data.object;
+          const userId = parseInt(session.metadata.userId);
+          if (users[userId]) {
+            users[userId].paid = true;
+            saveData();
+            console.log(`User ${userId} marked as paid`);
+          }
         }
-      } catch(e) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ received: true }));
+      } catch(err) {
+        console.error('Webhook error:', err.message);
         res.writeHead(400);
         res.end();
       }
