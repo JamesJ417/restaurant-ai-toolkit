@@ -4,16 +4,16 @@ const path = require('path');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
 const Stripe = require('stripe');
-const OpenAI = require('openai');
+const Groq = require('groq');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
 
-const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
-const isProduction = !!process.env.OPENAI_API_KEY;
+const groq = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
+const isProduction = !!process.env.GROQ_API_KEY;
 
 const PORT = process.env.PORT || 18790;
 const APP_DIR = __dirname;
@@ -105,19 +105,19 @@ function buildToolPrompt(toolName, input) {
   return basePrompt + context + outputFormat;
 }
 
-// Call AI (OpenAI in production, OpenClaw locally)
+// Call AI (Groq in production, OpenClaw locally)
 async function callAgent(agentId, prompt) {
-  // Use OpenAI in production (Railway)
-  if (isProduction && openai) {
+  // Use Groq in production (Railway)
+  if (isProduction && groq) {
     try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.1-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000
       });
       return completion.choices[0]?.message?.content || 'AI returned empty response';
     } catch (err) {
-      console.error('OpenAI error:', err.message);
+      console.error('Groq error:', err.message);
       return 'AI service error: ' + err.message;
     }
   }
