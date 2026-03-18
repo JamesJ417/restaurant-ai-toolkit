@@ -19,7 +19,11 @@ read -p "Enter your domain (e.g., restaurantmarketingai.app): " DOMAIN
 
 echo "Installing dependencies..."
 apt update
-apt install -y curl git nodejs npm nginx certbot python3-certbot-nginx
+apt install -y curl git nginx certbot python3-certbot-nginx
+
+# Install Node.js 20.x
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
 
 # Install Ollama
 echo "Installing Ollama (free local AI)..."
