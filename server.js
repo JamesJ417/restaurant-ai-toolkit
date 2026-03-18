@@ -39,12 +39,12 @@ const sessions = {};
 const generations = {};
 let userIdCounter = 1;
 
-// Rate limiting - 10 requests per minute per user
+// Rate limiting - 4 requests per minute per user
 const rateLimitMap = new Map();
 function checkRateLimit(userId) {
   const now = Date.now();
   const windowMs = 60000; // 1 minute
-  const limit = 10;
+  const limit = 4;
   
   if (!rateLimitMap.has(userId)) {
     rateLimitMap.set(userId, { count: 1, resetTime: now + windowMs });
