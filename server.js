@@ -8,7 +8,25 @@ const Stripe = require('stripe');
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.3-70b-versatile';
+
+// Multiple AI models for different tasks
+const AI_MODELS = {
+  fast: 'qwen3.5:2b',      // Quick responses, less accurate
+  balanced: 'llama3.3-70b-versatile',  // Good balance
+  best: 'llama3.3-70b-versatile'  // Most capable
+};
+
+// Health check endpoint
+function handleHealthCheck(req, res) {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    models: AI_MODELS
+  }));
+}
 const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
 
@@ -20,6 +38,32 @@ const users = {};
 const sessions = {};
 const generations = {};
 let userIdCounter = 1;
+
+// Rate limiting - 10 requests per minute per user
+const rateLimitMap = new Map();
+function checkRateLimit(userId) {
+  const now = Date.now();
+  const windowMs = 60000; // 1 minute
+  const limit = 10;
+  
+  if (!rateLimitMap.has(userId)) {
+    rateLimitMap.set(userId, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  const userLimit = rateLimitMap.get(userId);
+  if (now > userLimit.resetTime) {
+    rateLimitMap.set(userId, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (userLimit.count >= limit) {
+    return false;
+  }
+  
+  userLimit.count++;
+  return true;
+}
 
 // Load existing data
 function loadData() {
@@ -105,26 +149,39 @@ function buildToolPrompt(toolName, input) {
 // Call AI - tries Ollama (free local), then falls back to OpenClaw
 async function callAgent(agentId, prompt) {
   // Try Ollama first (free, local, no per-use cost)
+  const startTime = Date.now();
+  
   try {
+    // Use the best model for quality
+    const model = AI_MODELS.best;
+    console.log(`AI: Using model ${model}`);
+    
     const response = await fetch(`${OLLAMA_HOST}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: OLLAMA_MODEL,
+        model: model,
         messages: [{ role: 'user', content: prompt }],
-        stream: false
+        stream: false,
+        options: {
+          temperature: 0.7,
+          top_p: 0.9
+        }
       })
     });
     
     if (response.ok) {
       const data = await response.json();
       if (data.message?.content) {
-        console.log('AI: Used Ollama');
+        const duration = Date.now() - startTime;
+        console.log(`AI: Success in ${duration}ms`);
         return data.message.content;
       }
+    } else {
+      console.error('AI: Ollama error', response.status, await response.text());
     }
   } catch (err) {
-    console.log('Ollama not available, trying OpenClaw...');
+    console.error('AI: Ollama unavailable -', err.message);
   }
   
   // Fall back to OpenClaw
@@ -184,6 +241,12 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
     res.end();
+    return;
+  }
+  
+  // Health check endpoint
+  if (req.method === 'GET' && pathname === '/health') {
+    handleHealthCheck(req, res);
     return;
   }
   
@@ -568,6 +631,13 @@ const server = http.createServer((req, res) => {
     
     const session = sessions[sessionMatch[1]];
     const user = users[session.userId];
+    
+    // Rate limit check
+    if (!checkRateLimit(user.id)) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Too many requests. Please wait a moment.' }));
+      return;
+    }
     
     // Check payment status
     if (!user.paid && user.freeTrialUsed >= 5) {
