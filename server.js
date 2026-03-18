@@ -7,11 +7,10 @@ const Stripe = require('stripe');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
-
-const isProduction = !!process.env.GROQ_API_KEY;
 
 const PORT = process.env.PORT || 18790;
 const APP_DIR = __dirname;
@@ -103,32 +102,32 @@ function buildToolPrompt(toolName, input) {
   return basePrompt + context + outputFormat;
 }
 
-// Call AI (Groq in production, OpenClaw locally)
+// Call AI - tries Ollama (free local), then falls back to OpenClaw
 async function callAgent(agentId, prompt) {
-  // Use Groq in production (Railway)
-  if (isProduction && GROQ_API_KEY) {
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2000
-        })
-      });
+  // Try Ollama first (free, local, no per-use cost)
+  try {
+    const response = await fetch(`${OLLAMA_HOST}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        stream: false
+      })
+    });
+    
+    if (response.ok) {
       const data = await response.json();
-      return data.choices?.[0]?.message?.content || 'AI returned empty response';
-    } catch (err) {
-      console.error('Groq error:', err.message);
-      return 'AI service error: ' + err.message;
+      if (data.message?.content) {
+        console.log('AI: Used Ollama');
+        return data.message.content;
+      }
     }
+  } catch (err) {
+    console.log('Ollama not available, trying OpenClaw...');
   }
   
-  // Fall back to OpenClaw for local development
+  // Fall back to OpenClaw
   return new Promise((resolve, reject) => {
     const child = spawn('openclaw', ['agent', '--agent', agentId, '--message', prompt, '--json'], {
       cwd: '/home/james/.openclaw/workspace',
