@@ -5,7 +5,7 @@ const { spawn } = require('child_process');
 const crypto = require('crypto');
 const Stripe = require('stripe');
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_YOUR_KEY_HERE';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = Stripe(STRIPE_SECRET_KEY);
 const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
