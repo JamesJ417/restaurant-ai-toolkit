@@ -10,6 +10,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "stripe": "^20.4.1"
+    "stripe": "^20.4.1",
+    "openai": "^4.0.0"
   }
 }

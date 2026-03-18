@@ -4,11 +4,16 @@ const path = require('path');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
 const Stripe = require('stripe');
+const OpenAI = require('openai');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = Stripe(STRIPE_SECRET_KEY);
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
+
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
+const isProduction = process.env.RAILWAY_ENVIRONMENT !== undefined;
 
 const PORT = process.env.PORT || 18790;
 const APP_DIR = __dirname;
@@ -100,8 +105,24 @@ function buildToolPrompt(toolName, input) {
   return basePrompt + context + outputFormat;
 }
 
-// Call OpenClaw agent
-function callAgent(agentId, prompt) {
+// Call AI (OpenAI in production, OpenClaw locally)
+async function callAgent(agentId, prompt) {
+  // Use OpenAI in production (Railway)
+  if (isProduction && openai) {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000
+      });
+      return completion.choices[0]?.message?.content || 'AI returned empty response';
+    } catch (err) {
+      console.error('OpenAI error:', err.message);
+      return 'AI service error: ' + err.message;
+    }
+  }
+  
+  // Fall back to OpenClaw for local development
   return new Promise((resolve, reject) => {
     const child = spawn('openclaw', ['agent', '--agent', agentId, '--message', prompt, '--json'], {
       cwd: '/home/james/.openclaw/workspace',
