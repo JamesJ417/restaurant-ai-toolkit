@@ -107,7 +107,7 @@ function buildToolPrompt(toolName, input) {
 
 // Call AI (Groq in production, OpenClaw locally)
 async function callAgent(agentId, prompt) {
-  // Use Groq in production (Railway)
+  // Use Groq in production (Railway v2)
   if (isProduction && groq) {
     try {
       const completion = await groq.chat.completions.create({
