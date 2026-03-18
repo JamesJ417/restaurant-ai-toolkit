@@ -4,7 +4,6 @@
   "description": "AI-powered marketing toolkit for restaurants",
   "main": "server.js",
   "scripts": {
-    "postinstall": "npm install openai stripe",
     "start": "node server.js"
   },
   "engines": {
