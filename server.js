@@ -7,7 +7,7 @@ const Stripe = require('stripe');
 const OpenAI = require('openai');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const stripe = Stripe(STRIPE_SECRET_KEY);
+const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_YOUR_PRICE_ID';
 const DOMAIN = process.env.DOMAIN || 'https://restaurantmarketingai.app';
@@ -383,6 +383,12 @@ const server = http.createServer((req, res) => {
     }
     
     // Create Stripe checkout session
+    if (!stripe) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payment not configured' }));
+      return;
+    }
+    
     stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
@@ -415,6 +421,12 @@ const server = http.createServer((req, res) => {
   
   // Stripe webhook
   if (req.method === 'POST' && pathname === '/api/payment/webhook') {
+    if (!stripe) {
+      res.writeHead(503);
+      res.end();
+      return;
+    }
+    
     const sig = req.headers['stripe-signature'];
     let body = '';
     req.on('data', chunk => { body += chunk; });
