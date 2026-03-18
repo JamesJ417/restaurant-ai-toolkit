@@ -639,4 +639,4 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Restaurant AI Toolkit running on port ${PORT}`);
-});
+});// rebuild Wed Mar 18 00:07:48 EDT 2026
