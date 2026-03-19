@@ -213,6 +213,7 @@
             <div class="result" id="result">
                 <h3>✨ Your AI Response</h3>
                 <div class="result-content" id="responseContent"></div>
+                <button class="btn" style="margin-top:1rem; background:var(--secondary);" onclick="copyResponse()">📋 Copy Response</button>
                 <div class="cta">
                     <p style="margin-bottom: 1rem; color: var(--gray);">Want unlimited AI-generated content?</p>
                     <a href="http://45.55.136.187:18790" target="_blank">Get Started →</a>
@@ -228,6 +229,13 @@
     <script>
         let selectedTone = 'professional';
         let sessionId = null;
+        
+        function copyResponse() {
+            const text = document.getElementById('responseContent').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
         
         document.querySelectorAll('.tone').forEach(tone => {
             tone.addEventListener('click', () => {

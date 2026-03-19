@@ -106,7 +106,8 @@ const TOOL_PROMPTS = {
 1. Thank the customer for specific positive comments
 2. Address any negative feedback with empathy
 3. Invite them back
-4. Sign off as "The [Restaurant Name] Team"`,
+4. Sign off as "The [Restaurant Name] Team"
+IMPORTANT: Keep your response between 150-300 characters. Be concise and direct.`,
   generate_social_post: `You are a restaurant social media manager. Create engaging, platform-appropriate posts.`,
   generate_menu_description: `You are a restaurant menu writer. Create mouth-watering, appetizing descriptions.`,
   generate_email: `You are a restaurant owner writing marketing emails. Professional, engaging, clear call to action.`,
@@ -165,7 +166,9 @@ async function callAgent(agentId, prompt) {
         stream: false,
         options: {
           temperature: 0.7,
-          top_p: 0.9
+          top_p: 0.9,
+          num_predict: 350,
+          stop: ["\n\n"]
         }
       })
     });
