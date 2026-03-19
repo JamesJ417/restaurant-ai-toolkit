@@ -138,7 +138,7 @@ function buildToolPrompt(toolName, input) {
       outputFormat = '\n\nCreate a 200-400 word job post. Include restaurant name naturally. Add: job summary, responsibilities, requirements, benefits, and how to apply.';
       break;
     case 'generate_review_response':
-      outputFormat = '\n\nRespond to the review in the tone specified. Be specific and personal. Sign off naturally.';
+      outputFormat = ''; // Prompt already has everything
       break;
     case 'generate_social_post':
       outputFormat = '\n\nCreate a platform-appropriate post. Keep it natural and engaging. Use the restaurant name.';
