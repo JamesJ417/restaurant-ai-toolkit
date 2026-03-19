@@ -102,22 +102,7 @@ loadData();
 // Tool prompts
 const TOOL_PROMPTS = {
   generate_job_post: `You are a restaurant owner creating a job post. Make it engaging and professional.`,
-  generate_review_response: `You are the owner of "[RESTAURANT_NAME]" responding to a customer review.
-
-CUSTOMER REVIEW: "[REVIEW]"
-STAR RATING: [RATING] stars
-
-TONE INSTRUCTIONS: Write in a [TONE] tone. Be funny/witty if tone is witty. Be warm if friendly. Be professional if professional.
-- witty = clever, humorous, fun wordplay
-- friendly = warm, casual, approachable
-- professional = formal, business-like
-- apologetic = sorry, understanding
-- grateful = thankful, appreciative
-- humorous = funny, lighthearted
-- heartfelt = emotional, sincere
-- casual = relaxed, informal
-
-Write a 2-4 sentence response. Sign off as "The [RESTAURANT_NAME] Team".`,
+  generate_review_response: `Write a short review response (2-4 sentences). Match the tone. Sign off as "The Team".`,
   generate_social_post: `You are a restaurant social media manager. Create engaging, platform-appropriate posts.`,
   generate_menu_description: `You are a restaurant menu writer. Create mouth-watering, appetizing descriptions.`,
   generate_email: `You are a restaurant owner writing marketing emails. Professional, engaging, clear call to action.`,
