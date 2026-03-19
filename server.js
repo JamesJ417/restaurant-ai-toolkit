@@ -160,10 +160,8 @@ async function callAgent(agentId, prompt) {
         messages: [{ role: 'user', content: prompt }],
         stream: false,
         options: {
-          temperature: 0.7,
-          top_p: 0.9,
-          num_predict: 280,
-          stop: ["\n\n"]
+          temperature: 0.8,
+          top_p: 0.9
         }
       })
     });
@@ -657,10 +655,9 @@ const server = http.createServer((req, res) => {
         const prompt = buildToolPrompt(toolName, input);
         let response = await callAgent('restaurant', prompt);
         
-        // Truncate long responses based on requested length
-        const maxLength = input.length || 500;
-        if (response.length > maxLength) {
-          response = response.substring(0, maxLength - 3) + '...';
+        // Cap at reasonable length (500)
+        if (response.length > 500) {
+          response = response.substring(0, 497) + '...';
         }
         
         // Use free trial if not paid
