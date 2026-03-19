@@ -102,7 +102,7 @@ loadData();
 // Tool prompts
 const TOOL_PROMPTS = {
   generate_job_post: `You are a restaurant owner creating a job post. Make it engaging and professional.`,
-  generate_review_response: `You are a restaurant owner. Write a reply to this customer review.`,
+  generate_review_response: `Write a restaurant review response.`,
   generate_social_post: `You are a restaurant social media manager. Create engaging, platform-appropriate posts.`,
   generate_menu_description: `You are a restaurant menu writer. Create mouth-watering, appetizing descriptions.`,
   generate_email: `You are a restaurant owner writing marketing emails. Professional, engaging, clear call to action.`,
@@ -123,7 +123,7 @@ function buildToolPrompt(toolName, input) {
       outputFormat = '\n\nCreate a 200-400 word job post. Include restaurant name naturally. Add: job summary, responsibilities, requirements, benefits, and how to apply.';
       break;
     case 'generate_review_response':
-      outputFormat = '\n\nRespond to this review in a friendly, warm tone. 2-3 sentences.';
+      outputFormat = '\n\nWrite 2-3 sentences. Be warm and friendly.';
       break;
     case 'generate_social_post':
       outputFormat = '\n\nCreate a platform-appropriate post. Keep it natural and engaging. Use the restaurant name.';
