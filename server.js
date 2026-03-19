@@ -8,13 +8,13 @@ const Stripe = require('stripe');
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.3-70b-versatile';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 
 // Multiple AI models for different tasks
 const AI_MODELS = {
   fast: 'qwen3.5:2b',      // Quick responses, less accurate
-  balanced: 'llama3.3-70b-versatile',  // Good balance
-  best: 'llama3.3-70b-versatile'  // Most capable
+  balanced: 'llama3.2',     // Good balance
+  best: 'llama3.2'         // Most capable
 };
 
 // Health check endpoint
