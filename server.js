@@ -157,7 +157,10 @@ async function callAgent(agentId, prompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: 'You are a restaurant owner. Reply to customer reviews. Keep it short - 2-3 sentences. Use the restaurant name.' },
+          { role: 'user', content: prompt }
+        ],
         stream: false,
         options: {
           temperature: 0.8,
