@@ -657,7 +657,12 @@ const server = http.createServer((req, res) => {
         input.restaurantName = user.restaurantName;
         
         const prompt = buildToolPrompt(toolName, input);
-        const response = await callAgent('restaurant', prompt);
+        let response = await callAgent('restaurant', prompt);
+        
+        // Truncate long responses
+        if (response.length > 300) {
+          response = response.substring(0, 297) + '...';
+        }
         
         // Use free trial if not paid
         if (!user.paid && !user.freeTrialUsed) {
