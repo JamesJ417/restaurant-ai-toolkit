@@ -130,7 +130,7 @@ function buildToolPrompt(toolName, input) {
       outputFormat = '\n\nCreate a 200-400 word job post. Include restaurant name naturally. Add: job summary, responsibilities, requirements, benefits, and how to apply.';
       break;
     case 'generate_review_response':
-      outputFormat = '\n\nWrite a 50-200 word response. Match the requested tone. Be specific to the review content. Use the restaurant name. Sign off as "The [Restaurant Name] Team".';
+      outputFormat = '\n\nRespond to the review in the tone specified. Be specific and personal. Sign off naturally.';
       break;
     case 'generate_social_post':
       outputFormat = '\n\nCreate a platform-appropriate post. Keep it natural and engaging. Use the restaurant name.';
@@ -664,9 +664,10 @@ const server = http.createServer((req, res) => {
         const prompt = buildToolPrompt(toolName, input);
         let response = await callAgent('restaurant', prompt);
         
-        // Truncate long responses
-        if (response.length > 500) {
-          response = response.substring(0, 497) + '...';
+        // Truncate long responses based on requested length
+        const maxLength = input.length || 500;
+        if (response.length > maxLength) {
+          response = response.substring(0, maxLength - 3) + '...';
         }
         
         // Use free trial if not paid

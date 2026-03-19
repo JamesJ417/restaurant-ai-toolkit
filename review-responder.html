@@ -190,7 +190,7 @@
                     <div class="tone" data-tone="apologetic">Apologetic</div>
                     <div class="tone" data-tone="grateful">Grateful</div>
                     <div class="tone" data-tone="humorous">Humorous</div>
-                    <div class="tone" data-tone=" heartfelt">Heartfelt</div>
+                    <div class="tone" data-tone="heartfelt">Heartfelt</div>
                     <div class="tone" data-tone="casual">Casual</div>
                 </div>
             </div>
@@ -205,7 +205,7 @@
             </div>
             
             <div class="step">
-                <label>3. Star rating (1-5)</label>
+                <label>4. Star rating (1-5)</label>
                 <select id="rating">
                     <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
                     <option value="4" selected>⭐⭐⭐⭐ (4 stars)</option>
@@ -240,6 +240,7 @@
     
     <script>
         let selectedTone = 'professional';
+        let selectedLength = 500;
         let sessionId = null;
         
         function copyResponse() {
@@ -249,11 +250,21 @@
             });
         }
         
-        document.querySelectorAll('.tone').forEach(tone => {
+        // Handle tone selection
+        document.querySelectorAll('#tones .tone').forEach(tone => {
             tone.addEventListener('click', () => {
-                document.querySelectorAll('.tone').forEach(t => t.classList.remove('selected'));
+                document.querySelectorAll('#tones .tone').forEach(t => t.classList.remove('selected'));
                 tone.classList.add('selected');
                 selectedTone = tone.dataset.tone;
+            });
+        });
+        
+        // Handle length selection
+        document.querySelectorAll('#lengths .tone').forEach(tone => {
+            tone.addEventListener('click', () => {
+                document.querySelectorAll('#lengths .tone').forEach(t => t.classList.remove('selected'));
+                tone.classList.add('selected');
+                selectedLength = tone.dataset.length;
             });
         });
         
@@ -297,7 +308,8 @@
                     body: JSON.stringify({
                         review: review,
                         rating: parseInt(rating),
-                        tone: selectedTone
+                        tone: selectedTone,
+                        length: parseInt(selectedLength)
                     })
                 });
                 
