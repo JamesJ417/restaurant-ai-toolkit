@@ -123,7 +123,7 @@ function buildToolPrompt(toolName, input) {
       outputFormat = '\n\nCreate a 200-400 word job post. Include restaurant name naturally. Add: job summary, responsibilities, requirements, benefits, and how to apply.';
       break;
     case 'generate_review_response':
-      outputFormat = '\n\nIMPORTANT: You are REPLYING to a customer review. NOT writing a new review. Reply to what the customer said. Keep response SHORT - only 2-3 sentences max. Do not exceed ' + (input.length || 200) + ' characters.';
+      outputFormat = '\nReply to this review. 2 sentences. Under ' + (input.length || 200) + ' chars.';
       break;
     case 'generate_social_post':
       outputFormat = '\n\nCreate a platform-appropriate post. Keep it natural and engaging. Use the restaurant name.';
@@ -158,7 +158,7 @@ async function callAgent(agentId, prompt) {
       body: JSON.stringify({
         model: model,
         messages: [
-          { role: 'system', content: 'You are a restaurant owner. Reply to customer reviews. Keep it short - 2-3 sentences. Use the restaurant name.' },
+          { role: 'system', content: 'Short replies only. 2 sentences. Under 200 chars.' },
           { role: 'user', content: prompt }
         ],
         stream: false,
