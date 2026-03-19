@@ -660,8 +660,8 @@ const server = http.createServer((req, res) => {
         let response = await callAgent('restaurant', prompt);
         
         // Truncate long responses
-        if (response.length > 300) {
-          response = response.substring(0, 297) + '...';
+        if (response.length > 250) {
+          response = response.substring(0, 247) + '...';
         }
         
         // Use free trial if not paid
