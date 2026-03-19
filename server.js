@@ -139,7 +139,7 @@ function buildToolPrompt(toolName, input) {
       break;
   }
   
-  return basePrompt + context + outputFormat;
+  return context + outputFormat + '\n\n' + basePrompt;
 }
 
 // Call AI - tries Ollama (free local), then falls back to OpenClaw
