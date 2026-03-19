@@ -107,7 +107,7 @@ const TOOL_PROMPTS = {
 2. Address any negative feedback with empathy
 3. Invite them back
 4. Sign off as "The [Restaurant Name] Team"
-IMPORTANT: Keep your response between 150-300 characters. Be concise and direct.`,
+STRICT LIMIT: Your response MUST be under 250 characters total. No exceptions. Write 2-3 short sentences maximum.`,
   generate_social_post: `You are a restaurant social media manager. Create engaging, platform-appropriate posts.`,
   generate_menu_description: `You are a restaurant menu writer. Create mouth-watering, appetizing descriptions.`,
   generate_email: `You are a restaurant owner writing marketing emails. Professional, engaging, clear call to action.`,
@@ -167,7 +167,7 @@ async function callAgent(agentId, prompt) {
         options: {
           temperature: 0.7,
           top_p: 0.9,
-          num_predict: 350,
+          num_predict: 280,
           stop: ["\n\n"]
         }
       })
