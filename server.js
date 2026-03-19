@@ -12,9 +12,9 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 
 // Multiple AI models for different tasks
 const AI_MODELS = {
-  fast: 'qwen3.5:2b',      // Quick responses, less accurate
-  balanced: 'llama3.2',     // Good balance
-  best: 'llama3.2'         // Most capable
+  fast: 'tinyllama',        // Tiny, fast, ~1GB
+  balanced: 'tinyllama',   // Good balance
+  best: 'tinyllama'        // Most capable
 };
 
 // Health check endpoint
