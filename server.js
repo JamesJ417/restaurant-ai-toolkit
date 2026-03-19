@@ -102,9 +102,14 @@ loadData();
 // Tool prompts
 const TOOL_PROMPTS = {
   generate_job_post: `You are a restaurant owner creating a job post. Make it engaging and professional.`,
-  generate_review_response: `Write a SHORT review response. 2 sentences max. Under 200 characters. Example: "Thank you so much! We appreciate your business and look forward to seeing you again. - The Restaurant Team"
+  generate_review_response: `Write a review response. Use a [TONE] tone. Do not mention character limits. Just write naturally.
 
-Review to respond to:`,
+Restaurant name: [RESTAURANT_NAME]
+Customer review: [REVIEW]
+Rating: [RATING] stars
+Tone to use: [TONE]
+
+Write the response now:`,
   generate_social_post: `You are a restaurant social media manager. Create engaging, platform-appropriate posts.`,
   generate_menu_description: `You are a restaurant menu writer. Create mouth-watering, appetizing descriptions.`,
   generate_email: `You are a restaurant owner writing marketing emails. Professional, engaging, clear call to action.`,
